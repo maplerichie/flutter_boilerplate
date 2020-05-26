@@ -20,7 +20,7 @@ final ThemeData theme = ThemeData(
       color: Color(0x99ffffff),
     ),
     errorStyle: TextStyle(
-      color: Colors.yellow,
+      color: Colors.white,
     ),
     contentPadding: EdgeInsets.only(left: 30, bottom: 18, top: 18, right: 30),
     fillColor: Color(0x33ffffff),
@@ -43,7 +43,7 @@ final ThemeData theme = ThemeData(
       ),
       borderSide: BorderSide(
         width: 2,
-        color: Colors.yellow,
+        color: Colors.white,
         style: BorderStyle.solid,
       ),
     ),
@@ -53,7 +53,7 @@ final ThemeData theme = ThemeData(
       ),
       borderSide: BorderSide(
         width: 2,
-        color: Colors.yellow,
+        color: Colors.white,
         style: BorderStyle.solid,
       ),
     ),

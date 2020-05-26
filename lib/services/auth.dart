@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'api.dart';
+import 'http.dart';
 
 class AuthService {
   final HttpService _http = new HttpService();

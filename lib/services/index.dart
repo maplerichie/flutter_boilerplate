@@ -1,2 +1,2 @@
-export 'api.dart';
+export 'http.dart';
 export 'auth.dart';

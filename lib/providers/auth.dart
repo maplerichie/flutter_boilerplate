@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:flutter/material.dart';
 import '../models/index.dart';
+import '../services/index.dart';
 
 enum Status { Uninitialized, Authenticated, Authenticating, Unauthenticated }
 
 class AuthProvider with ChangeNotifier {
+  String _boxName = "authBox";
   Auth _auth;
   Status _status = Status.Uninitialized;
 
@@ -21,24 +24,31 @@ class AuthProvider with ChangeNotifier {
         _status = Status.Unauthenticated;
         _auth = null;
       }
-
-      Future.delayed(Duration(milliseconds: 500), () {
-        notifyListeners();
-      });
+      notifyListeners();
     });
   }
 
   Future<bool> login({String username, String password}) async {
-    print('Login');
+    _status = Status.Authenticating;
+    notifyListeners();
     try {
-      _status = Status.Authenticating;
-      notifyListeners();
-      // await authService.login(x,x);
-      await Future.delayed(Duration(milliseconds: 1000), () {
-        logout();
-        return false;
+      return await AuthService().login(username, password).then((res) {
+        if (res is bool) {
+          _status = Status.Unauthenticated;
+          notifyListeners();
+          return res;
+        }
+        _auth = new Auth(
+          jwt: res['jwt'],
+          role: 1,
+          status: 1,
+          user: User.fromJson(json.encode(res['data'])),
+        );
+        updateAuthBox(_auth);
+        _status = Status.Authenticated;
+        notifyListeners();
+        return true;
       });
-      return true;
     } catch (e) {
       _status = Status.Unauthenticated;
       notifyListeners();
@@ -47,40 +57,43 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future logout() async {
-    print('Logout');
-    _auth = null;
-    _status = Status.Unauthenticated;
+    resetAuth();
     notifyListeners();
     return Future.delayed(Duration.zero);
   }
 
   Future<bool> loginAnonymous(bool isSuccess) async {
     print('LoginAnonymous');
-    try {
-      _status = Status.Authenticating;
-      notifyListeners();
-      await Future.delayed(Duration(milliseconds: 800), () {
-        if (isSuccess) {
-          _auth = new Auth();
-          _auth.role = 1;
+    _status = Status.Authenticating;
+    notifyListeners();
+    await Future.delayed(Duration(milliseconds: 800), () {
+      if (isSuccess) {
+        _auth = new Auth(
+            role: 0,
+            status: 1,
+            user: new User(
+              fullName: 'John Doe',
+              contactNo: '60123456789',
+            ));
 
-          _status = Status.Authenticated;
-          notifyListeners();
-        } else {
-          _status = Status.Unauthenticated;
-          notifyListeners();
-        }
-      });
-      return isSuccess;
-    } catch (e) {
-      _status = Status.Unauthenticated;
-      notifyListeners();
-      return false;
-    }
+        _status = Status.Authenticated;
+        notifyListeners();
+      } else {
+        _status = Status.Unauthenticated;
+        notifyListeners();
+      }
+    });
+    return isSuccess;
+  }
+
+  void resetAuth() async {
+    await Hive.deleteBoxFromDisk(_boxName);
+    _auth = null;
+    _status = Status.Unauthenticated;
   }
 
   Future<Auth> getAuthBox() async {
-    var authBox = await Hive.openBox('authBox');
+    var authBox = await Hive.openBox(_boxName);
     if (authBox.length < 1) {
       return _auth = null;
     } else {
@@ -90,14 +103,8 @@ class AuthProvider with ChangeNotifier {
   }
 
   void updateAuthBox(Auth auth) async {
-    var authBox = await Hive.openBox('authBox');
+    var authBox = await Hive.openBox(_boxName);
     authBox.add(auth);
     _auth = auth;
-    notifyListeners();
-  }
-
-  void clearAuthBox() async {
-    var authBox = await Hive.openBox('authBox');
-    authBox.delete('authBox');
   }
 }

@@ -43,6 +43,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: "^0.7.3"
+  # hive_generator: ^0.7.0+2
+  # build_runner: ^1.10.0
+  # Hive adapter generate: >flutter packages pub run build_runner build
 
 flutter_icons:
   android: "ic_launcher"

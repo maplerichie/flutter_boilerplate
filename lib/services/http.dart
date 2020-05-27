@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
+import 'dart:convert';
 
 class HttpService {
-  static const endpoint = 'https://enad54jjotq3u.x.pipedream.net';
+  static const endpoint = 'http://localhost:3000/api/v1';
+  // static const endpoint = 'https://enad54jjotq3u.x.pipedream.net';
   Dio req = new Dio();
 
   HttpService() {
@@ -12,6 +14,7 @@ class HttpService {
           var token = 'interceptor';
           options.headers = {
             'Authorization': 'Bearer: $token',
+            'Content-Type': 'application/json',
           };
           req.interceptors.requestLock.unlock();
           return options;
@@ -26,10 +29,10 @@ class HttpService {
         '$endpoint/$path' + (data != null ? '/$data' : ''),
       );
       // response = await req.get("/test", queryParameters: data);
-      return res.data;
-    } catch (e) {
-      print(e);
-      return false;
+
+      return res;
+    } on DioError catch (e) {
+      return dioError(e);
     }
   }
 
@@ -37,13 +40,12 @@ class HttpService {
     try {
       Response res = await req.post(
         '$endpoint/$path',
-        data: data,
+        data: json.encode(data),
       );
 
-      return res.data;
-    } catch (e) {
-      print(e);
-      return false;
+      return res;
+    } on DioError catch (e) {
+      return dioError(e);
     }
   }
 
@@ -57,10 +59,9 @@ class HttpService {
         },
       );
 
-      return res.data;
-    } catch (e) {
-      print(e);
-      return false;
+      return res;
+    } on DioError catch (e) {
+      return dioError(e);
     }
   }
 
@@ -79,11 +80,16 @@ class HttpService {
         },
       );
 
-      return res.data;
-    } catch (e) {
-      print(e);
-      return false;
+      return res;
+    } on DioError catch (e) {
+      return dioError(e);
     }
+  }
+
+  dynamic dioError(DioError e) {
+    print(
+        '{"code": "${e.response.statusCode}", "message": "${e.response.data['errors']}"');
+    return false;
   }
 }
 
